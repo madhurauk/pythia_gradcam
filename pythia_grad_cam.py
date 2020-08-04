@@ -1,3 +1,9 @@
+import sys
+sys.path.append('vqa-maskrcnn-benchmark')
+
+print("in pythia_gradcam : vqa-maskrcnn-benchmark appended to sys")
+#print(sys.path)
+
 from maskrcnn_benchmark.structures.bounding_box import BoxList
 from collections import OrderedDict, Sequence
 from torch.nn import functional as F
@@ -11,6 +17,7 @@ class _BaseWrapper(object):
     """Please modify forward() and backward() according to your task."""
 
     def __init__(self, model):
+        print("in pythia_gradcam : init")
         super(_BaseWrapper, self).__init__()
         self.device = next(model.parameters()).device
         self.model = model
@@ -25,10 +32,10 @@ class _BaseWrapper(object):
         """Simple classification."""
         self.model.zero_grad()
         self.logits = self.model.forward(image)
-        # self.logits = self.model(image)["scores"]
-        # return self.logits
-        self.probs = F.softmax(self.logits, dim=1)
-        return self.probs.sort(dim=1, descending=True)
+        self.logits = self.model(image)["scores"]
+        return self.logits
+        #self.probs = F.softmax(self.logits, dim=1)
+        #return self.probs.sort(dim=1, descending=True)
 
     def backward(self, ids):
         """Class-specific backpropagation.

@@ -1,27 +1,34 @@
 import sys
-#sys.path.append('../pythia')
-#sys.path.append('vqa-maskrcnn-benchmark')
-
+sys.path.append('pythia')
+#sys.path.append('/srv/share3/mummettuguli3/code/pythia_gradcam/vqa-maskrcnn-benchmark')
+print("in pythia_model_2 : pythia appended to sys")
+#print(sys.path)
 import yaml
 import torch
 import torch.nn.functional as F
 import torchvision.models as models
-from maskrcnn_benchmark.config import cfg
-from maskrcnn_benchmark.layers import nms
-from maskrcnn_benchmark.modeling.detector import build_detection_model
-from maskrcnn_benchmark.structures.image_list import to_image_list
+#from maskrcnn_benchmark.config import cfg
+#from maskrcnn_benchmark.layers import nms
+#from maskrcnn_benchmark.modeling.detector import build_detection_model
+#from maskrcnn_benchmark.structures.image_list import to_image_list
 from maskrcnn_benchmark.utils.model_serialization import load_state_dict
 from pythia.utils.configuration import ConfigNode
 from pythia.tasks.processors import VocabProcessor, VQAAnswerProcessor
 from pythia.models.pythia import Pythia
 from pythia.common.registry import registry
 from pythia.common.sample import Sample, SampleList
+#from mmf.utils.configuration import ConfigNode
+#from mmf.tasks.processors import VocabProcessor, VQAAnswerProcessor
+#from mmf.models.pythia import Pythia
+#from mmf.common.registry import registry
+#from mmf.common.sample import Sample, SampleList
 
 torch.backends.cudnn.enabled = False
 
 class PythiaVQA(torch.nn.Module):
 
     def __init__(self, device):
+        print("in pythia_model_2 : init")
         super(PythiaVQA, self).__init__()
         self.device = device
         self._init_processors()
@@ -57,6 +64,7 @@ class PythiaVQA(torch.nn.Module):
                           self.answer_processor.get_vocab_size())
 
     def _build_pythia_model(self):
+        print("in pythia_model_2 : _build_pythia_model")
         state_dict = torch.load('models/pythia.pth')    # pythia
         # state_dict = torch.load('models/sort.ckpt')['model']    # sort
         # state_dict = torch.load('models/squint.ckpt')['model']    # squint
@@ -64,6 +72,7 @@ class PythiaVQA(torch.nn.Module):
 
         model_config = self.config.model_attributes.pythia
         # model_config.model_data_dir = "/visinf/home/vilab22/Documents/RemoteProjects/dlcv/pythia/" #/content/
+        print("in pythia_model_2:", Pythia)
         model = Pythia(model_config)
         model.build()
         model.init_losses_and_metrics()
