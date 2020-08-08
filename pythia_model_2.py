@@ -7,10 +7,10 @@ import yaml
 import torch
 import torch.nn.functional as F
 import torchvision.models as models
-#from maskrcnn_benchmark.config import cfg
+from maskrcnn_benchmark.config import cfg
 #from maskrcnn_benchmark.layers import nms
-#from maskrcnn_benchmark.modeling.detector import build_detection_model
-#from maskrcnn_benchmark.structures.image_list import to_image_list
+from maskrcnn_benchmark.modeling.detector import build_detection_model
+from maskrcnn_benchmark.structures.image_list import to_image_list
 from maskrcnn_benchmark.utils.model_serialization import load_state_dict
 from pythia.utils.configuration import ConfigNode
 from pythia.tasks.processors import VocabProcessor, VQAAnswerProcessor
@@ -33,8 +33,8 @@ class PythiaVQA(torch.nn.Module):
         self.device = device
         self._init_processors()
         self.pythia_model = self._build_pythia_model()
-        #self.detection_model = self._build_detection_model()
-        #self.resnet152_model = self._build_resnet_model()
+        self.detection_model = self._build_detection_model()
+        self.resnet152_model = self._build_resnet_model()
 
     def _init_processors(self):
         #with open("model_data/pythia.yaml") as f:

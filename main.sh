@@ -8,5 +8,6 @@
 #SBATCH --partition=short
 
 source /nethome/mummettuguli3/anaconda2/bin/activate
-conda activate maskrcnn_benchmark_fresh_2
+#conda activate maskrcnn_benchmark_fresh_2
+conda activate maskrcnn_benchmark_local_2
 python main.py

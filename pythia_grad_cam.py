@@ -1,5 +1,5 @@
 import sys
-sys.path.append('vqa-maskrcnn-benchmark')
+sys.path.append('purva-vqa-maskrcnn-benchmark')
 
 print("in pythia_gradcam : vqa-maskrcnn-benchmark appended to sys")
 #print(sys.path)
