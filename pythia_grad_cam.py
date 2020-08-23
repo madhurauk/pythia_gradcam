@@ -32,10 +32,11 @@ class _BaseWrapper(object):
         """Simple classification."""
         self.model.zero_grad()
         self.logits = self.model.forward(image)
-        self.logits = self.model(image)["scores"]
-        return self.logits
-        #self.probs = F.softmax(self.logits, dim=1)
-        #return self.probs.sort(dim=1, descending=True)
+        print("in pgc: ",self.model(image).size())
+        #self.logits = self.model(image)["scores"]
+        #return self.logits
+        self.probs = F.softmax(self.logits, dim=1)
+        return self.probs.sort(dim=1, descending=True)
 
     def backward(self, ids):
         """Class-specific backpropagation.

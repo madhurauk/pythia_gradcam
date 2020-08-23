@@ -17,7 +17,9 @@ DEVICE = "cuda:0"
 
 TARGET_IMAGE_SIZE = [448, 448]
 CHANNEL_MEAN = [0.485, 0.456, 0.406]
+#CHANNEL_MEAN = (0.485,0.456,0.406)
 CHANNEL_STD = [0.229, 0.224, 0.225]
+#CHANNEL_STD = (0.229, 0.224, 0.225)
 IMAGE_SHAPE = torch.Size(TARGET_IMAGE_SIZE)
 
 use_pythia = True
@@ -68,54 +70,50 @@ def predict():
         vqa_model = Model(DEVICE)
         vqa_model.eval()
         vqa_model_GCAM = pgc.GradCAM(model=vqa_model, candidate_layers=[layer])
-        #data_loader = DataLoader(vqa_dataset, batch_size=1, shuffle=False) #remove 
+        data_loader = DataLoader(vqa_dataset, batch_size=1, shuffle=False) #remove 
         start = time.time()
         results = []
         result_index = 0
         answer_dir = model_dir + "/" + model_dir + "_answers_" + dataType + "/" + model_dir + "_pred_subset_"
         questions, answs = {}, {}
-        #for j, batch in enumerate(data_loader): #question = string , image = path
-            #print_progress(start, checkpoint+j, dataset_len)
-            #annId = batch['annId'].item()
-        #annId = 5459581
-        batch = vqa_dataset.__getitem__(0)
-        print("batch in main.py: ", batch)
-        annId = batch['annId']
-        question = batch['question'][0]
-        #question = 'What animal?'
-        raw_image = batch['raw_image'].squeeze() #cv2.imread
-        #raw_image = cv2.imread('images/cat_dog.jpg', 1)
-        #raw_image = raw_image.cpu().numpy()
-        raw_image = cv2.resize(raw_image, tuple(TARGET_IMAGE_SIZE))
+        for j, batch in enumerate(data_loader): #question = string , image = path
+            print_progress(start, checkpoint+j, dataset_len)
+            print("in main_dataloader batch: ",batch)
+            annId = batch['annId'].item()
+            question = batch['question'][0]
+            raw_image = batch['raw_image'].squeeze() #cv2.imread
+            raw_image = raw_image.cpu().numpy()
+            raw_image = cv2.resize(raw_image, tuple(TARGET_IMAGE_SIZE))
 
-        print("QID: ", annId)
+            print("QID: ", annId)
+            print("batch: ", batch)
 
-        actual, indices = vqa_model_GCAM.forward(batch, IMAGE_SHAPE)
-        top_indices = indices[0]
-        top_scores = actual[0]
+            actual, indices = vqa_model_GCAM.forward(batch, IMAGE_SHAPE)
+            top_indices = indices[0]
+            top_scores = actual[0]
 
-        probs = []
-        answers = []
+            probs = []
+            answers = []
 
-        for idx, score in enumerate(top_scores):
-            probs.append(score.item())
-            answers.append(
-                vqa_model.answer_processor.idx2word(top_indices[idx].item())
-            )
+            for idx, score in enumerate(top_scores):
+                probs.append(score.item())
+                answers.append(
+                    vqa_model.answer_processor.idx2word(top_indices[idx].item())
+                )
 
-        # get questions and answers for visualization later
-        answs[annId] = answers[0]
-        questions[annId] = question
+            # get questions and answers for visualization later
+            answs[annId] = answers[0]
+            questions[annId] = question
 
-        results.append([annId, answers[0], probs[0]])
+            results.append([annId, answers[0], probs[0]])
 
-        vqa_model_GCAM.backward(ids=indices[:, [0]])
-        attention_map_GradCAM = vqa_model_GCAM.generate(target_layer=layer)
+            vqa_model_GCAM.backward(ids=indices[:, [0]])
+            attention_map_GradCAM = vqa_model_GCAM.generate(target_layer=layer)
 
-        attention_map_GradCAM = attention_map_GradCAM.squeeze().cpu().numpy()
+            attention_map_GradCAM = attention_map_GradCAM.squeeze().cpu().numpy()
 
-        save_attention_map(attn_map=attention_map_GradCAM, qid=annId)
-
+            save_attention_map(attn_map=attention_map_GradCAM, qid=annId)
+            break
         # save questions and answs
         with open('questions.pickle', 'wb') as handle:
             pickle.dump(questions, handle, protocol=pickle.HIGHEST_PROTOCOL)
