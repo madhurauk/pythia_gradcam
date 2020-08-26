@@ -90,3 +90,23 @@ class VQA_Dataset():
         np.load = np_load_old
         #ids = np.squeeze(ids[:, :1].astype(np.int32))
         return ids
+    
+    def preprocess_input(self):
+        annId = 1967892
+        question = 'what color are the walls?'
+        imgId = 196789
+        imgFilename = 'COCO_' + self.dataSubType + '_' + str(imgId).zfill(12) + '.jpg' 
+        image_path = self.imgDir + imgFilename
+        img = Image.open(image_path)
+        raw_image = cv2.imread(image_path)
+        resnet_img = img.convert("RGB")
+        data_transforms = transforms.Compose([
+            transforms.Resize(self.target_image_size),
+            transforms.ToTensor(),
+            transforms.Normalize(self.channel_mean, self.channel_std),
+        ])
+        resnet_img = data_transforms(resnet_img)
+        if len(np.shape(img)) == 2:
+            img = img.convert("RGB")
+        detectron_img, detectron_scale = self._image_transform(img)
+        return {"annId": annId, "question": question, "resnet_img": resnet_img, "detectron_img": detectron_img, "detectron_scale": detectron_scale, "raw_image": raw_image}

@@ -78,8 +78,7 @@ def predict():
             #print_progress(start, checkpoint+j, dataset_len)
             #annId = batch['annId'].item()
         #annId = 5459581
-        #batch = vqa_dataset.__getitem__(0)
-        batch = vqa_dataset.preprocess_input()
+        batch = vqa_dataset.__getitem__(0)
         print("batch in main.py: ", batch)
         annId = batch['annId']
         question = batch['question'][0]
@@ -129,6 +128,7 @@ def print_layer_names(model, full=False):
         print(list(model.named_modules())[0])
     else:
         print(*list(model.named_modules()), sep='\n')
+
 
 if __name__ == "__main__":
     predict()
