@@ -10,11 +10,17 @@ import torchvision.transforms as transforms
 from PIL import Image
 from vqaTools.vqa import VQA
 
+filter_questions = True
+
 class VQA_Dataset():
     def __init__(self, evalIds, annFile, quesFile, imgDir, dataSubType, target_image_size, channel_mean, channel_std, splits, subset, checkpoint):
         # initialize VQA api for QA annotations
         self.vqa = VQA(annFile, quesFile)
-        self.annIds = self.vqa.getQuesIds()
+        if filter_questions:
+            #self.annIds = self.vqa.getQuesIds(quesTypes='what color are the')
+            self.annIds = self.vqa.getQuesIds(ansTypes='yes/no')
+        else:
+            self.annIds = self.vqa.getQuesIds()
         #self.annIds = self._get_evaluated_ids(evalIds)
         self.splits = splits
         self.subset = subset
@@ -56,7 +62,7 @@ class VQA_Dataset():
         return img, im_scale
 
     def __getitem__(self, index):
-        print("in pythia_dataset gtitem: index: ",index)
+        #print("in pythia_dataset gtitem: index: ",index)
         #print("self.annIds: ", self.annIds)
         index = self.subset * self.subset_size + index + self.checkpoint
         annId = int(self.annIds[index])

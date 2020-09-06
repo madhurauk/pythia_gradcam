@@ -177,13 +177,9 @@ class PythiaVQA(torch.nn.Module):
         return feat_list[0]
 
     def forward(self, batch):
-        #question = batch['question'][0]
-        #detectron_img = batch['detectron_img'].squeeze()
-        #detectron_scale = [batch['detectron_scale'].item()]
-        #resnet_img = batch['resnet_img'].squeeze()
-        question = batch['question']
+        question = batch['question'][0]
         detectron_img = batch['detectron_img'].squeeze()
-        detectron_scale = [batch['detectron_scale']]
+        detectron_scale = [batch['detectron_scale'].item()]
         resnet_img = batch['resnet_img'].squeeze()
 
         detectron_features = self.get_detectron_features(detectron_img, detectron_scale)

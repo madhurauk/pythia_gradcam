@@ -14,4 +14,5 @@ import pdb
 def save_attention_map(attn_map, qid):
     """Save attn_map image with proper qid extension."""
     print("Saving attention map...")
-    np.save("./GRADCAM_MAPS/sort_new_gcam_maps_npy/" + str(qid) + ".npy", attn_map)
+    #np.save("./GRADCAM_MAPS/sort_new_gcam_maps_npy/" + str(qid) + ".npy", attn_map)
+    np.save("./GRADCAM_MAPS/madhura/" + str(qid) + ".npy", attn_map)
