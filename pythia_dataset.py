@@ -98,10 +98,14 @@ class VQA_Dataset():
         return ids
     
     def preprocess_input(self):
-        annId = 1967892
-        question = 'what color are the walls?'
-        imgId = 196789
-        imgFilename = 'COCO_' + self.dataSubType + '_' + str(imgId).zfill(12) + '.jpg' 
+        #annId = 1967892
+        #question = 'what color are the walls?'
+        #imgId = 196789
+        annId = 262148000
+        ann = self.vqa.loadQA(annId)[0]
+        imgId = ann['image_id']
+        imgFilename = 'COCO_' + self.dataSubType + '_' + str(imgId).zfill(12) + '.jpg'
+        question = self.vqa.getQuestion(ann)
         image_path = self.imgDir + imgFilename
         img = Image.open(image_path)
         raw_image = cv2.imread(image_path)
@@ -115,4 +119,10 @@ class VQA_Dataset():
         if len(np.shape(img)) == 2:
             img = img.convert("RGB")
         detectron_img, detectron_scale = self._image_transform(img)
-        return {"annId": annId, "question": question, "resnet_img": resnet_img, "detectron_img": detectron_img, "detectron_scale": detectron_scale, "raw_image": raw_image}
+        return [{"annId": annId, "question": question, "resnet_img": resnet_img, "detectron_img": detectron_img, "detectron_scale": detectron_scale, "raw_image": raw_image},{"ground_truth":ann["multiple_choice_answer"]}]
+
+    def get_ground_truth_answer(self, ann):
+        #return self.vqa.loadQA(ann)[0]["multiple_choice_answer"]
+        #print("in py dataset getground truth:",self.qa[ann])
+        #return self.qa[ann]
+        return self.vqa.getGroundTruthAnswer(ann)

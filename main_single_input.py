@@ -73,16 +73,17 @@ def predict():
         results = []
         result_index = 0
         answer_dir = model_dir + "/" + model_dir + "_answers_" + dataType + "/" + model_dir + "_pred_subset_"
-        questions, answs = {}, {}
+        questions, answs, ground_truth_ans = {}, {}, {}
         #for j, batch in enumerate(data_loader): #question = string , image = path
             #print_progress(start, checkpoint+j, dataset_len)
             #annId = batch['annId'].item()
         #annId = 5459581
         #batch = vqa_dataset.__getitem__(0)
-        batch = vqa_dataset.preprocess_input()
-        print("batch in main.py: ", batch)
+        batch_groundtruth = vqa_dataset.preprocess_input()
+        batch = batch_groundtruth[0]
+        #print("batch in main.py: ", batch)
         annId = batch['annId']
-        question = batch['question'][0]
+        question = batch['question']
         #question = 'What animal?'
         raw_image = batch['raw_image'].squeeze() #cv2.imread
         #raw_image = cv2.imread('images/cat_dog.jpg', 1)
@@ -99,6 +100,7 @@ def predict():
         answers = []
 
         for idx, score in enumerate(top_scores):
+            #print("idx:",idx)
             probs.append(score.item())
             answers.append(
                 vqa_model.answer_processor.idx2word(top_indices[idx].item())
@@ -107,10 +109,17 @@ def predict():
         # get questions and answers for visualization later
         answs[annId] = answers[0]
         questions[annId] = question
-
+        ground_truth_ans[annId] = batch_groundtruth[1]["ground_truth"]
+        print("ground truth answer:",ground_truth_ans[annId])
+        print("indices shape",indices.size(),"\n indices",indices,"\n indices[:,[0]]",indices[:,[0]],"\n indices type:",indices[:,[0]].type())
+        index_of_ground_truth = vqa_model.answer_processor.word2idx(ground_truth_ans[annId])
+        print("index of ground truth:", index_of_ground_truth,"\n type",type(index_of_ground_truth),"\n print", index_of_ground_truth)
         results.append([annId, answers[0], probs[0]])
-
-        vqa_model_GCAM.backward(ids=indices[:, [0]])
+        index_tensor=torch.tensor([[index_of_ground_truth]],dtype=torch.int64).to(DEVICE)
+        print("index tensor type:",index_tensor.type(),"\n printing index tensor" ,index_tensor)
+        
+        vqa_model_GCAM.backward(ids=index_tensor)
+        #vqa_model_GCAM.backward(ids=indices[:, [0]])
         attention_map_GradCAM = vqa_model_GCAM.generate(target_layer=layer)
 
         attention_map_GradCAM = attention_map_GradCAM.squeeze().cpu().numpy()
@@ -122,6 +131,8 @@ def predict():
             pickle.dump(questions, handle, protocol=pickle.HIGHEST_PROTOCOL)
         with open('answers.pickle', 'wb') as handle:
             pickle.dump(answs, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open('ground_truth_answers.pickle', 'wb') as handle:
+            pickle.dump(ground_truth_ans, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def print_layer_names(model, full=False):

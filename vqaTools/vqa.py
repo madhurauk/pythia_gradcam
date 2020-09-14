@@ -48,12 +48,14 @@ class VQA:
         print('creating index...')
         imgToQA = {ann['image_id']: [] for ann in self.dataset['annotations']}
         qa =  {ann['question_id']:       [] for ann in self.dataset['annotations']}
+        #print('in createIndex:',qa[262148000])
         qqa = {ann['question_id']:       [] for ann in self.dataset['annotations']}
         for ann in self.dataset['annotations']:
             imgToQA[ann['image_id']] += [ann]
             qa[ann['question_id']] = ann
         for ques in self.questions['questions']:
             qqa[ques['question_id']] = ques
+        #print('in createIndex::',qa[262148000])
         print('index created!')
 
         # create class members
@@ -181,3 +183,6 @@ class VQA:
         quesId = ann['question_id']
         return self.qqa[quesId]['question']
 
+    #def getGroundTruthAnswer(self, ann):
+        #print("in vqa.py ground truth:", self.qa)
+        #return self.qa[ann]
