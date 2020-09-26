@@ -18,7 +18,8 @@ class VQA_Dataset():
         self.vqa = VQA(annFile, quesFile)
         if filter_questions:
             #self.annIds = self.vqa.getQuesIds(quesTypes='what color are the')
-            self.annIds = self.vqa.getQuesIds(ansTypes='yes/no')
+            self.annIds = self.vqa.getQuesIds(quesTypes='how many')
+            #self.annIds = self.vqa.getQuesIds(ansTypes='yes/no')
         else:
             self.annIds = self.vqa.getQuesIds()
         #self.annIds = self._get_evaluated_ids(evalIds)
@@ -122,7 +123,7 @@ class VQA_Dataset():
         return [{"annId": annId, "question": question, "resnet_img": resnet_img, "detectron_img": detectron_img, "detectron_scale": detectron_scale, "raw_image": raw_image},{"ground_truth":ann["multiple_choice_answer"]}]
 
     def get_ground_truth_answer(self, ann):
-        #return self.vqa.loadQA(ann)[0]["multiple_choice_answer"]
+        return self.vqa.loadQA(ann)[0]["multiple_choice_answer"]
         #print("in py dataset getground truth:",self.qa[ann])
         #return self.qa[ann]
-        return self.vqa.getGroundTruthAnswer(ann)
+        #return self.vqa.getGroundTruthAnswer(ann)

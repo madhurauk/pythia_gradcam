@@ -1,4 +1,4 @@
-"""Main file."""
+"""Main file. Visualizing predicted answer"""
 from torch.utils.data import DataLoader
 from pythia_dataset import VQA_Dataset
 from tools import save_attention_map

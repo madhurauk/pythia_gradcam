@@ -1,4 +1,4 @@
-"""Main file."""
+"""Main file. Visualizing ground truth answer"""
 from torch.utils.data import DataLoader
 from pythia_dataset import VQA_Dataset
 from tools import save_attention_map
@@ -75,10 +75,13 @@ def predict():
         results = []
         result_index = 0
         answer_dir = model_dir + "/" + model_dir + "_answers_" + dataType + "/" + model_dir + "_pred_subset_"
-        questions, answs = {}, {}
+        questions, answs, ground_truth_ans = {}, {}, {}
+        count_loop = 0
         for j, batch in enumerate(data_loader): #question = string , image = path
+            if count_loop == 750:
+                break
             print_progress(start, checkpoint+j, dataset_len)
-            print("in main_dataloader batch: ",batch)
+            #print("in main_dataloader batch: ",batch)
             annId = batch['annId'].item()
             question = batch['question'][0]
             raw_image = batch['raw_image'].squeeze() #cv2.imread
@@ -86,7 +89,8 @@ def predict():
             raw_image = cv2.resize(raw_image, tuple(TARGET_IMAGE_SIZE))
 
             print("QID: ", annId)
-            print("batch: ", batch)
+            #print("batch: ", batch)
+            count_loop = count_loop+1
 
             actual, indices = vqa_model_GCAM.forward(batch, IMAGE_SHAPE)
             top_indices = indices[0]
@@ -104,22 +108,27 @@ def predict():
             # get questions and answers for visualization later
             answs[annId] = answers[0]
             questions[annId] = question
+            ground_truth_ans[annId] = vqa_dataset.get_ground_truth_answer(annId)
+            index_of_ground_truth = vqa_model.answer_processor.word2idx(ground_truth_ans[annId])
+            index_tensor=torch.tensor([[index_of_ground_truth]],dtype=torch.int64).to(DEVICE)
 
             results.append([annId, answers[0], probs[0]])
 
-            vqa_model_GCAM.backward(ids=indices[:, [0]])
+            vqa_model_GCAM.backward(ids=index_tensor)
+            #vqa_model_GCAM.backward(ids=indices[:, [0]])
             attention_map_GradCAM = vqa_model_GCAM.generate(target_layer=layer)
 
             attention_map_GradCAM = attention_map_GradCAM.squeeze().cpu().numpy()
 
             save_attention_map(attn_map=attention_map_GradCAM, qid=annId)
-            break
+
         # save questions and answs
         with open('questions.pickle', 'wb') as handle:
             pickle.dump(questions, handle, protocol=pickle.HIGHEST_PROTOCOL)
         with open('answers.pickle', 'wb') as handle:
             pickle.dump(answs, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
+        with open('ground_truth_answers.pickle', 'wb') as handle:
+            pickle.dump(ground_truth_ans, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def print_layer_names(model, full=False):
     if not full:
