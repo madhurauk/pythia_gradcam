@@ -119,7 +119,7 @@ def predict():
         print("index tensor type:",index_tensor.type(),"\n printing index tensor" ,index_tensor)
         
         vqa_model_GCAM.backward(ids=index_tensor)
-        #vqa_model_GCAM.backward(ids=indices[:, [0]])
+        #vqa_model_GCAM.backward(ids=indices[:, [0]]) #uncomment for visualizing predicted_answer
         attention_map_GradCAM = vqa_model_GCAM.generate(target_layer=layer)
 
         attention_map_GradCAM = attention_map_GradCAM.squeeze().cpu().numpy()
