@@ -70,6 +70,7 @@ def predict():
         vqa_model = Model(DEVICE)
         vqa_model.eval()
         vqa_model_GCAM = pgc.GradCAM(model=vqa_model, candidate_layers=[layer])
+        #vqa_model_GCAM = pgc.GradCAM(model=vqa_model)
         data_loader = DataLoader(vqa_dataset, batch_size=1, shuffle=False) #remove 
         start = time.time()
         results = []
@@ -78,7 +79,7 @@ def predict():
         questions, answs, ground_truth_ans = {}, {}, {}
         count_loop = 0
         for j, batch in enumerate(data_loader): #question = string , image = path
-            if count_loop == 750:
+            if count_loop == 250:
                 break
             print_progress(start, checkpoint+j, dataset_len)
             #print("in main_dataloader batch: ",batch)
@@ -121,7 +122,7 @@ def predict():
             attention_map_GradCAM = attention_map_GradCAM.squeeze().cpu().numpy()
 
             save_attention_map(attn_map=attention_map_GradCAM, qid=annId)
-
+            break
         # save questions and answs
         with open('questions.pickle', 'wb') as handle:
             pickle.dump(questions, handle, protocol=pickle.HIGHEST_PROTOCOL)

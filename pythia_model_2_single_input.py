@@ -3,6 +3,8 @@ sys.path.append('pythia')
 #sys.path.append('/srv/share3/mummettuguli3/code/pythia_gradcam/vqa-maskrcnn-benchmark')
 print("in pythia_model_2 : pythia appended to sys")
 #print(sys.path)
+import pdb
+import pickle
 import yaml
 import torch
 import torch.nn.functional as F
@@ -35,6 +37,23 @@ class PythiaVQA(torch.nn.Module):
         self.pythia_model = self._build_pythia_model()
         self.detection_model = self._build_detection_model()
         self.resnet152_model = self._build_resnet_model()
+        #torch.save(self.pythia_model.named_modules(),'pythia_layers_in_order.pt')
+        #pdb.set_trace()
+        def forward_hook(key):
+            def forward_hook_(module, input, output):
+                #pdb.set_trace()
+                torch.save(output, './ACTIVATION_MAPS/cabinet/'+key+'.pt')
+                #print("pythia.py: forward_hook:",output)
+            return forward_hook_
+
+        pythia_layers_in_order = []
+        for name, module in self.pythia_model.named_modules():
+            #if name == "image_feature_embeddings_list.0.0.image_attention_model":
+            #print("pythia.py: hooking layer ",name)
+            module.register_forward_hook(forward_hook(name))
+            pythia_layers_in_order.append(name)
+        with open('layers.pickle', 'wb') as handle:
+            pickle.dump(pythia_layers_in_order, handle)
 
     def _init_processors(self):
         #with open("model_data/pythia.yaml") as f:
@@ -125,6 +144,7 @@ class PythiaVQA(torch.nn.Module):
                                     im_scales,
                                     feat_name='fc6',
                                     conf_thresh=0.2):
+        #pdb.set_trace()
         batch_size = len(output[0]["proposals"])
         n_boxes_per_image = [len(_) for _ in output[0]["proposals"]]
         score_list = output[0]["scores"].split(n_boxes_per_image)

@@ -65,8 +65,10 @@ def predict():
     print("vqa_dataset size: {}".format(dataset_len))
     with torch.enable_grad():
         layer = 'resnet152_model.7'
+        #layer = 'f_o_image.layers.0'
         vqa_model = Model(DEVICE)
         vqa_model.eval()
+        #vqa_model_GCAM = pgc.GradCAM(model=vqa_model)
         vqa_model_GCAM = pgc.GradCAM(model=vqa_model, candidate_layers=[layer])
         #data_loader = DataLoader(vqa_dataset, batch_size=1, shuffle=False) #remove 
         start = time.time()

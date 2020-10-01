@@ -102,11 +102,13 @@ class VQA_Dataset():
         #annId = 1967892
         #question = 'what color are the walls?'
         #imgId = 196789
-        annId = 262148000
+        annId = 262682007
+        #annId = 262148000
         ann = self.vqa.loadQA(annId)[0]
         imgId = ann['image_id']
         imgFilename = 'COCO_' + self.dataSubType + '_' + str(imgId).zfill(12) + '.jpg'
         question = self.vqa.getQuestion(ann)
+        #question = 'what color is the sink?'
         image_path = self.imgDir + imgFilename
         img = Image.open(image_path)
         raw_image = cv2.imread(image_path)

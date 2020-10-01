@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import copy
+import pdb
 
 
 class _BaseWrapper(object):
@@ -32,7 +33,7 @@ class _BaseWrapper(object):
         """Simple classification."""
         self.model.zero_grad()
         self.logits = self.model.forward(image)
-        print("in pgc: ",self.model(image).size())
+        #print("in pgc: ",self.model(image).size())
         #self.logits = self.model(image)["scores"]
         #return self.logits
         self.probs = F.softmax(self.logits, dim=1)
@@ -142,9 +143,11 @@ class GradCAM(_BaseWrapper):
 
         def forward_hook(key):
             def forward_hook_(module, input, output):
+                #pdb.set_trace()
                 # print("forward_hook_:")
                 # Save featuremaps
-                print("key forward: ", key)
+                print("key forward: ", key)#,"\n output shape:",output.shape)
+                #torch.save(output,'sink.pt')
                 # output.register_hook(backward_hook(key))
                 output = detach_output(output, 0)
                 if not isinstance(output, dict) or not isinstance(output, BoxList):
