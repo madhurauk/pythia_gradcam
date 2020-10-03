@@ -12,6 +12,7 @@ import pdb
 import cv2
 import sys
 import gc
+import argparse
 
 DEVICE = "cuda:0"
 
@@ -54,7 +55,7 @@ def print_progress(start, j, dataset_len):
     print("Iteration: {} | Progress: {}% | Finished in: {}d {}h {}m {}s | Time Per Annotation: {}s".format(j, round(
         progress, 6), round(day), round(hour), round(minutes), round(seconds), round(time_per_annotation, 2)))
 
-def predict():
+def predict(args):
     splits = 1
     subset = -1
     checkpoint = 0
@@ -75,14 +76,14 @@ def predict():
         results = []
         result_index = 0
         answer_dir = model_dir + "/" + model_dir + "_answers_" + dataType + "/" + model_dir + "_pred_subset_"
-        questions, answs, ground_truth_ans = {}, {}, {}
+        questions, answs, ground_truth_ans, my_ans = {}, {}, {}, {}
         #for j, batch in enumerate(data_loader): #question = string , image = path
             #print_progress(start, checkpoint+j, dataset_len)
             #annId = batch['annId'].item()
         #annId = 5459581
         #batch = vqa_dataset.__getitem__(0)
-        batch_groundtruth = vqa_dataset.preprocess_input()
-        batch = batch_groundtruth[0]
+        batch_with_extras = vqa_dataset.preprocess_input(args)
+        batch = batch_with_extras[0]
         #print("batch in main.py: ", batch)
         annId = batch['annId']
         question = batch['question']
@@ -110,18 +111,26 @@ def predict():
 
         # get questions and answers for visualization later
         answs[annId] = answers[0]
+        #answs[annId] = batch_with_extras[1]["answer"]
         questions[annId] = question
-        ground_truth_ans[annId] = batch_groundtruth[1]["ground_truth"]
-        print("ground truth answer:",ground_truth_ans[annId])
+        if args.question == "from_ann_id":
+            ground_truth_ans[annId] = batch_with_extras[1]["ground_truth"]
+            #desired_answer_index = vqa_model.answer_processor.word2idx(ground_truth_ans[annId])
+            answer_final = ground_truth_ans[annId]
+        else:
+            answs[annId] = batch_with_extras[1]["answer"]
+            answer_final = answs[annId]
+            #desired_answer_index = vqa_model.answer_processor.word2idx(answs[annId])
+        #print("ground truth answer:",ground_truth_ans[annId])
         print("indices shape",indices.size(),"\n indices",indices,"\n indices[:,[0]]",indices[:,[0]],"\n indices type:",indices[:,[0]].type())
-        index_of_ground_truth = vqa_model.answer_processor.word2idx(ground_truth_ans[annId])
-        print("index of ground truth:", index_of_ground_truth,"\n type",type(index_of_ground_truth),"\n print", index_of_ground_truth)
+        desired_answer_index = vqa_model.answer_processor.word2idx(answer_final)
+        print("index of ground truth:", desired_answer_index,"\n type",type(desired_answer_index),"\n print", desired_answer_index)
         results.append([annId, answers[0], probs[0]])
-        index_tensor=torch.tensor([[index_of_ground_truth]],dtype=torch.int64).to(DEVICE)
+        index_tensor=torch.tensor([[desired_answer_index]],dtype=torch.int64).to(DEVICE)
         print("index tensor type:",index_tensor.type(),"\n printing index tensor" ,index_tensor)
         
         vqa_model_GCAM.backward(ids=index_tensor)
-        #vqa_model_GCAM.backward(ids=indices[:, [0]]) #uncomment for visualizing predicted_answer
+        #vqa_model_GCAM.backward(ids=indices[:, [0]])#uncomment for visualizing predicted_answer
         attention_map_GradCAM = vqa_model_GCAM.generate(target_layer=layer)
 
         attention_map_GradCAM = attention_map_GradCAM.squeeze().cpu().numpy()
@@ -144,4 +153,14 @@ def print_layer_names(model, full=False):
         print(*list(model.named_modules()), sep='\n')
 
 if __name__ == "__main__":
-    predict()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--ann_id', type=int, default=0,
+                        help='annotation id')
+    parser.add_argument('--question', type=str, default='from_ann_id',
+                        help='question')
+    parser.add_argument('--answer', type=str, default='',
+                        help='answer')
+
+    args = parser.parse_args()
+
+    predict(args)

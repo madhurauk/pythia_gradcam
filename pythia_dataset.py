@@ -98,17 +98,26 @@ class VQA_Dataset():
         #ids = np.squeeze(ids[:, :1].astype(np.int32))
         return ids
     
-    def preprocess_input(self):
+    def preprocess_input(self, args):
         #annId = 1967892
         #question = 'what color are the walls?'
         #imgId = 196789
-        annId = 262682007
+        #annId = 262682007
         #annId = 262148000
-        ann = self.vqa.loadQA(annId)[0]
-        imgId = ann['image_id']
+        #annId = 131743 #made up id
+        annId = args.ann_id
+        if args.question == 'from_ann_id':
+            ann = self.vqa.loadQA(annId)[0]
+            imgId = ann['image_id']
+            question = self.vqa.getQuestion(ann)
+        else:
+            imgId = annId
+            question = args.question
+        #imgId = ann['image_id']
         imgFilename = 'COCO_' + self.dataSubType + '_' + str(imgId).zfill(12) + '.jpg'
-        question = self.vqa.getQuestion(ann)
+        #question = self.vqa.getQuestion(ann)
         #question = 'what color is the sink?'
+        #question = "what color are the man's trousers?"
         image_path = self.imgDir + imgFilename
         img = Image.open(image_path)
         raw_image = cv2.imread(image_path)
@@ -122,7 +131,10 @@ class VQA_Dataset():
         if len(np.shape(img)) == 2:
             img = img.convert("RGB")
         detectron_img, detectron_scale = self._image_transform(img)
-        return [{"annId": annId, "question": question, "resnet_img": resnet_img, "detectron_img": detectron_img, "detectron_scale": detectron_scale, "raw_image": raw_image},{"ground_truth":ann["multiple_choice_answer"]}]
+        if args.question == 'from_ann_id':
+            return [{"annId": annId, "question": question, "resnet_img": resnet_img, "detectron_img": detectron_img, "detectron_scale": detectron_scale, "raw_image": raw_image},{"ground_truth":ann["multiple_choice_answer"]}]
+        else:
+            return [{"annId": annId, "question": question, "resnet_img": resnet_img, "detectron_img": detectron_img, "detectron_scale": detectron_scale, "raw_image": raw_image},{"answer":args.answer}]
 
     def get_ground_truth_answer(self, ann):
         return self.vqa.loadQA(ann)[0]["multiple_choice_answer"]

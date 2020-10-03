@@ -42,7 +42,7 @@ class PythiaVQA(torch.nn.Module):
         def forward_hook(key):
             def forward_hook_(module, input, output):
                 #pdb.set_trace()
-                torch.save(output, './ACTIVATION_MAPS/cabinet/'+key+'.pt')
+                torch.save(output, './ACTIVATION_MAPS/'+key+'.pt')
                 #print("pythia.py: forward_hook:",output)
             return forward_hook_
 
